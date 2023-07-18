@@ -17,4 +17,4 @@ i've also included the `epd2in13_V3` and `epdconfig` libraries and a couple of f
 you also might want to install Pillow if you haven't already:
 `pip install Pillow`
 
-please make a project issue if theres anything that goes wrong.
+## please make a project issue if theres anything that goes wrong.
