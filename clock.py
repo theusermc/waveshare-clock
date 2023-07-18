@@ -1,68 +1,78 @@
 #!/usr/bin/python3
 # -*- coding:utf-8 -*-
+
 import sys
 import os
-
-picdir = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "pic"
-)
-libdir = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "lib"
-)
-if os.path.exists(libdir):
-    sys.path.append(libdir)
-
 import logging
 import epd2in13_V3
 import time
+import json
+import random
 from PIL import Image, ImageDraw, ImageFont
-import traceback
 
 logging.basicConfig(level=logging.DEBUG)
 
 try:
-    logging.info("epd2in13_V3 Demo")
+    logging.info("epd2in13_V3 datetime and message of the day")
 
     epd = epd2in13_V3.EPD()
-    logging.info("init")
+    logging.info("init and Clear")
     epd.init()
-    logging.info("clearing")
     epd.Clear(0xFF)
 
     # Drawing on the image
-    font42 = ImageFont.truetype(
-        os.path.join(picdir, "trebucbold.ttf"), 42
-    )
-    font24 = ImageFont.truetype(
-        os.path.join(picdir, "trebuc.ttf"), 24
-    )
+    font52 = ImageFont.truetype('TREBUCBD.ttf', 52)
+    font24 = ImageFont.truetype('trebuc.ttf', 24)
+    fontIT = ImageFont.truetype('trebucit.ttf', 20)
 
-    logging.info("Now displaying time")
-    time_image = Image.new("1", (epd.height, epd.width), 255)
+    clock_refresh_interval = 4  # 4 seconds
+    motd_refresh_interval = 60  # 1 minute in seconds
+
+    logging.info("Reading message of the day from JSON file...")
+    with open('motd.json', 'r') as file:
+        motd_data = json.load(file)
+
+    logging.info("Showing time, date, and message of the day...")
+    time_image = Image.new('1', (epd.height, epd.width), 255)
     time_draw = ImageDraw.Draw(time_image)
     date_draw = ImageDraw.Draw(time_image)
-    previous_time = ""
-    previous_date = ""
-
-    # While editing the parameters,
-    # keep in mind that the resolution of the display is 250 × 122.
+    motd_draw = ImageDraw.Draw(time_image)
+    previous_clock_time = ''
+    previous_date = ''
+    previous_motd_update = 0
 
     while True:
-        current_time = time.strftime("%H:%M:%S")
-        if current_time != previous_time:
-            time_draw.rectangle((0, 0, 250, 51), fill=255)
-            time_draw.text((0, 0), current_time, font=font42, fill=0)
+        current_time = time.strftime('%l:%M %p').lstrip().lower()
+        if current_time != previous_clock_time:
+            # Update time display
+            time_draw.rectangle((0, 0, 250, 61), fill=255)
+            time_draw.text((0, 0), current_time, font=font52, fill=0)
             rotated_time_image = time_image.rotate(180)
             epd.displayPartial(epd.getbuffer(rotated_time_image))
-            previous_time = current_time
-        current_date = time.strftime("%m/%d/%Y")
+            previous_clock_time = current_time
+
+        current_date = time.strftime('%A, %b %d, \'%y')
         if current_date != previous_date:
-            date_draw.rectangle((0, 51, 250, 112), fill=255)
-            date_draw.text((0, 51), current_date, font=font24, fill=0)
+            # Update date display
+            date_draw.rectangle((0, 61, 250, 86), fill=255)
+            date_draw.text((0, 61), current_date, font=font24, fill=0)
             rotated_date_image = time_image.rotate(180)
             epd.displayPartial(epd.getbuffer(rotated_date_image))
             previous_date = current_date
-        time.sleep(5)
+
+        if time.time() - previous_motd_update >= motd_refresh_interval:
+            # Choose a random line from motd_data
+            random_motd = random.choice(motd_data)
+
+            # Update motd display
+            motd_draw.rectangle((0, 90, 250, 122), fill=255)
+            motd_draw.text((0, 90), random_motd, font=fontIT, fill=0)
+            rotated_motd_image = time_image.rotate(180)
+            epd.displayPartial(epd.getbuffer(rotated_motd_image))
+
+            previous_motd_update = time.time()
+
+        time.sleep(clock_refresh_interval)
 
 except IOError as e:
     logging.info(e)
