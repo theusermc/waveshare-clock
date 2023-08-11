@@ -1,7 +1,7 @@
 ﻿# waveshare-clock
 just a simple digital clock that shows the current system time and date on a waveshare 2.13 (v3) display.
 
-note: you might want to enable SPI under Interface settings in `raspi-config`.
+note: you might want to enable SPI under Interface settings in `raspi-config` if you haven't already.
 
 requirements:
 
