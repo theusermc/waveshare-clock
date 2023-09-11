@@ -65,7 +65,7 @@ try:
             random_motd = random.choice(motd_data)
 
             # Update motd display
-            motd_draw.rectangle((0, 90, 250, 122), fill=255)
+            motd_draw.rectangle((0, 86, 250, 122), fill=255)
             motd_draw.text((0, 90), random_motd, font=fontIT, fill=0)
             rotated_motd_image = time_image.rotate(180)
             epd.displayPartial(epd.getbuffer(rotated_motd_image))
